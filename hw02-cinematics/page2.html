@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>My first three.js app</title>
+		<style>
+			body { 
+                background-color: #000000;
+                margin: 0px;
+                overflow: hidden;
+             }
+
+			canvas { width: 100%; height: 100% }
+
+            #container {
+            pointer-events: none;
+            position: absolute;
+            top: 0;
+            z-index: 1;
+            position: absolute;
+            background-color: transparent;
+            opacity: .7;
+            }
+
+            #info {
+            position: absolute;
+            top: 0px;
+            width: 100%;
+            color: #ffffff;
+            padding: 5px;
+            font-family: Monospace;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 2;
+            }
+        </style>
+        <script src="jquery.js"></script>
+
+    </head>
+    
+	<body>
+        <!-- <div id="info">
+            Poly:<input type="input" style="text-align:center;" value="cat" size="15"id="poly" >
+            <br> <br>
+            Text: <input type="text" id="text" >
+        </div> -->
+        <div id='container'></div>
+        <!-- <canvas id='transparent' width='640' height='512' style="display: none;"></canvas>
+        <canvas id='canvas' width='512' height='512' style="display: none;"></canvas> -->
+        <p id='status'></p>
+        <!-- <video id="video" autoplay style="display:noun"></video>
+        <div id="my_camera" style = "width:320px; height:240px;"></div>
+        <div id="my_result"></div> -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.7/p5.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.7/addons/p5.dom.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.7/addons/p5.sound.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/102/three.min.js"></script>
+        <script src="https://threejs.org/examples/js/loaders/OBJLoader.js"></script>
+        <script src="https://threejs.org/examples/js/loaders/MTLLoader.js"></script>
+    
+        <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix"></script>
+
+        <!-- <script src="webcam.min.js"></script> -->
+		<script>
+            //Scene set-up
+            var scene = new THREE.Scene();
+			var camera = new THREE.PerspectiveCamera(85, window.innerWidth/window.innerHeight,0.1, 10000 );
+			var renderer = new THREE.WebGLRenderer({antialias:true});
+			renderer.setSize( window.innerWidth, window.innerHeight );
+            // renderer.setClearColor(0x000000);
+            renderer.setPixelRatio(window.devicePixelRatio);
+			document.body.appendChild( renderer.domElement );
+
+            var ambience = new THREE.AmbientLight(0xffffff,0.5);
+            scene.add(ambience);
+            var light = new THREE.PointLight(0xffffff,0.5);
+            scene.add(light);
+
+            //Floor
+            var geoFloor = new THREE.PlaneGeometry(200,200,20,20)
+            var materialFloor = new THREE.MeshBasicMaterial({
+                color:0x00ff00,
+                wireframe:true
+            })
+            var floor = new THREE.Mesh(geoFloor,materialFloor);
+            floor.position.y = -10;
+            floor.rotation.x = -90 * Math.PI/180;
+            scene.add(floor);
+
+            //Normal Texture
+            var texCube = new THREE.TextureLoader().load("textures/jr.jpeg");
+            texCube.wrapS = THREE.RepeatWrapping;
+            texCube.wrapT = THREE.RepeatWrapping;
+            texCube.repeat.set(1,1);
+
+            //Photo
+            var texPhoto = new THREE.TextureLoader().load("/../textures/0.png");
+            texPhoto.wrapS = THREE.RepeatWrapping;
+            texPhoto.wrapT = THREE.RepeatWrapping;
+            texPhoto.repeat.set(1,1);
+           
+            //Box
+			var geometry = new THREE.BoxGeometry(10,10,10);
+			var material = new THREE.MeshLambertMaterial( {map:texPhoto} );
+            var cube = new THREE.Mesh( geometry, material );
+            scene.add(cube);
+            
+			camera.position.z = 100;
+
+            var thisArray = sessionStorage.getItem('portArray');
+            console.log(thisArray);
+
+            //snaps
+            let pathName1 = "/../textures/";
+            let pathName3 = ".png";
+            let textures = [];
+            let num = 40;
+            for (let i = 0 ; i < num; i ++){
+                let pathName2 = i.toString();
+                let pathName = pathName1.concat(pathName2,pathName3);
+                let texSnap = new THREE.TextureLoader().load(pathName);
+                texSnap.wrapS = THREE.RepeatWrapping;
+                texSnap.wrapT = THREE.RepeatWrapping;
+                texSnap.repeat.set(1,1);
+                textures.push(texSnap);
+                console.log(pathName);
+            }
+            
+            //Photo wall
+            var geoPhoto = new THREE.PlaneGeometry(20,20);
+
+            for (let n = 0; n  < 20; n ++){
+                for (let i = 0 ; i < num ; i++){
+                    let photoMat = new THREE.MeshLambertMaterial({map:textures[i]});
+                    let object = new THREE.Mesh(geoPhoto,photoMat);
+                    object.position.x = Math.random() * 800 - 400;
+                    object.position.y = Math.random() * 800 - 400;
+                    object.position.z = Math.random() * 800 - 400;
+                    object.rotation.x = Math.random() * 2 * Math.PI;
+                    object.rotation.y = Math.random() * 2 * Math.PI;
+                    object.rotation.z = Math.random() * 2 * Math.PI;
+                    object.scale.x = Math.random() + 5;
+                    object.scale.y = Math.random() + 5;
+                    object.scale.z = Math.random() + 5;
+                    scene.add(object);
+                }
+            }   
+
+
+            //other stuff
+            // var textures = [];
+            // var thisArray = sessionStorage.getItem('portArray');
+            // console.log(thisArray);
+            // console.log(thisArray.length);
+            // for (let pic in thisArray){
+            //     let texture = new THREE.TextureLoader().load(pic);
+            //     texture.wrapS = THREE.RepeatWrapping;
+            //     texture.wrapT = THREE.RepeatWrapping;
+            //     texture.repeat.set(1,1);
+            //     textures.push(texture);
+            // }
+            // console.log(textures.length);
+
+            // var geoPhoto = new THREE.PlaneGeometry(20,20);
+            // var matPhoto = new THREE.MeshBasicMaterial({map:texCube });
+            // for (let i = 0 ; i < 20; i ++){
+            //     var object = new THREE.Mesh(geoPhoto, matPhoto);
+            //     object.position.x = Math.random() * 800 - 400;
+            //     object.position.y = Math.random() * 800 - 400;
+            //     object.position.z = Math.random() * 800 - 400;
+            //     object.rotation.x = Math.random() * 2 * Math.PI;
+            //     object.rotation.y = Math.random() * 2 * Math.PI;
+            //     object.rotation.z = Math.random() * 2 * Math.PI;
+            //     object.scale.x = Math.random() + 5;
+            //     object.scale.y = Math.random() + 5;
+            //     object.scale.z = Math.random() + 5;
+            //     // meshPhoto.position.x = Math.random(-100,100);
+            //     // meshPhoto.rotation.z = Math.PI;
+            //     // photos.push(meshPhoto)
+            //     scene.add(object);
+            // }
+
+            //Let the stuff show
+            var keyboard = {}
+			var animate = function () {
+				requestAnimationFrame( animate );
+
+				cube.rotation.x += 0.01;
+				cube.rotation.y += 0.01;
+
+                if(keyboard[37]){
+                    camera.rotation.y += Math.PI*0.01;
+                }
+
+                if (keyboard[39]){
+                    camera.rotation.y -= Math.PI*0.02;
+                }
+
+                if(keyboard[38]){
+                    camera.rotation.x +=  Math.PI*0.01;
+                }
+
+                if(keyboard[40]){
+                    camera.rotation.x -=  Math.PI*0.01;
+                }
+
+                if(keyboard[87]){
+                    camera.position.z -=  1;
+                }
+                if(keyboard[83]){
+                    camera.position.z +=  1;
+                }
+
+                if(keyboard[82]){
+                    camera.position.y +=  1;
+                }
+
+                if(keyboard[70]){
+                    camera.position.y -=  1;
+                }
+
+                if(keyboard[68]){
+                    camera.position.x -=  1;
+                }
+
+                if(keyboard[71]){
+                    camera.position.x +=  1;
+                }
+
+				renderer.render( scene, camera );
+			};
+
+			animate();
+
+            function keyDown(event){
+                keyboard[event.keyCode] = true;
+                console.log(event.keyCode);
+            }
+
+            function keyUp(event){
+                keyboard[event.keyCode] = false;
+            }
+
+            function navigate(){
+
+            }
+            window.addEventListener('keydown',keyDown);
+            window.addEventListener('keyup',keyUp);
+
+
+		</script>
+	</body>
+</html>
